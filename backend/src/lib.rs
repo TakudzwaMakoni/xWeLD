@@ -3,10 +3,13 @@ use wasm_bindgen::prelude::*;
 use web_sys::WebGlRenderingContext as GL;
 use web_sys::*;
 
-mod common;
-mod programs;
-mod setup;
-mod shaders;
+mod graphics {
+    pub mod common;
+    pub mod programs;
+    pub mod setup;
+    pub mod shaders;
+}
+
 
 #[wasm_bindgen]
 extern "C" {
@@ -17,8 +20,8 @@ extern "C" {
 #[wasm_bindgen]
 pub struct Client {
     gl: WebGlRenderingContext,
-    program_col_2d: programs::Col2D,
-    program_circle_2d: programs::Circle2D,
+    program_col_2d: graphics::programs::Col2D,
+    program_circle_2d: graphics::programs::Circle2D,
 }
 
 #[wasm_bindgen]
@@ -26,10 +29,10 @@ impl Client {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
         console_error_panic_hook::set_once();
-        let gl_ = setup::initialise_webgl_context().unwrap();
+        let gl_ = graphics::setup::initialise_webgl_context().unwrap();
         Self {
-            program_col_2d: programs::Col2D::new(&gl_),
-            program_circle_2d: programs::Circle2D::new(&gl_),
+            program_col_2d: graphics::programs::Col2D::new(&gl_),
+            program_circle_2d: graphics::programs::Circle2D::new(&gl_),
             gl: gl_,
         }
     }

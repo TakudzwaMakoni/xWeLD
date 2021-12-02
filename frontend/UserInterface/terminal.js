@@ -3,9 +3,65 @@ module.exports  = {
   output:"x",
   terminal: function() {
 
+    // command map and commands
+    var commandMap = new Map(
+      [
+        ["print", user_print_command],
+      ]
+    )
+
+    function user_print_command(args){
+      str = ""
+      for(arg in args){
+          str += args[arg] + " ";
+      }
+      log(str);
+
+    }
+
     // private variables
     var output="";
     var input="";
+    var data=[] // reference to the data
+
+
+    //private functions
+     function colouredText(msg, colour) {
+      return "<text class='"+colour+"'>"+msg+"</text>";
+    }
+
+    function updateScroll() {
+      terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    function log(msg, newline=true) {
+        output += colouredText("WeLD: ","green") + msg + (newline?"<br/>":"") ;
+        document.getElementById("terminal").innerHTML = output + "UserIn: " + input + "<";
+        updateScroll()
+      };
+
+    function logError(msg, newline=true){
+        output += colouredText("WeLD (error): ","red") + msg + (newline?"<br/>":"");
+        document.getElementById("terminal").innerHTML = output + "UserIn: " + input + "<";
+        updateScroll()
+      }
+
+    function logWarning(msg, newline=true){
+        output += colouredText("WeLD (warning): ","orange") + msg + (newline?"<br/>":"");
+        document.getElementById("terminal").innerHTML = output + "UserIn: " + input + "<";
+        updateScroll()
+      }
+
+    // public functions
+    this.logWarning = function(msg,newline=true){logWarning(msg,newline)}
+    this.logError = function(msg,newline=true){logError(msg,newline)}
+    this.log = function(msg,newline=true){log(msg,newline)}
+    this.colouredText = function(msg, colour){
+      return colouredText(msg, colour);
+    }
+    this.setData = function(d){data=d}
+
+
     terminal = document.createElement("div");
     document.body.appendChild(terminal);
     terminal.setAttribute("tabindex","0");
@@ -21,16 +77,20 @@ module.exports  = {
     terminal.style.fontFamily = "monospace";
     terminal.style.overflowX = "scroll";
     terminal.style.overflowY = "scroll";
+
     terminal.addEventListener("focus",function(event){
-        terminal.style.color = "black";
+        terminal.style.color = "white";
+        terminal.style.backgroundColor = "black";
         terminal.innerHTML = output + "UserIn: " + input + "<";
     })
+
     terminal.addEventListener("focusout",function(event){
-        terminal.style.backgroundColor = "white";
+        terminal.style.backgroundColor = "rgb(20,20,20)";
         terminal.style.color = "rgb(173,172,173)";
     });
 
     terminal.focus();
+
     terminal.addEventListener("keydown", function( event ) {
       var key = event.keyCode;
       var char = String.fromCharCode((96 <= key && key <= 105) ? key-48 : key).toLowerCase();
@@ -46,8 +106,7 @@ module.exports  = {
         {
           var args = input.split(" ");
           var command = args[0]
-          console.log(args)
-          /*
+
           if(!commandMap.has(command))
           {
             input = "";
@@ -60,7 +119,7 @@ module.exports  = {
             terminal.innerHTML = output + "UserIn: " +input + "<";
             break;
           }
-          */
+
         }
         case 8/*backspace*/:
         {

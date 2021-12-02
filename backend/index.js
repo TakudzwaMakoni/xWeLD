@@ -1,8 +1,10 @@
-const rust = import("./pkg/x_weld")
-const terminal = require("../frontend/UserInterface/terminal")
+import css from "./style.css";
+const rust = import("./pkg/x_weld");
+const ui = require("../frontend/UserInterface/terminal");
 
 
-let terminalObj = terminal.terminal();
+let terminal = ui.terminal();
+terminal.log("hello world!");
 
 let sim = document.createElement("div");
 document.body.appendChild(sim);

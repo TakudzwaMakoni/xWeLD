@@ -28,5 +28,13 @@ module.exports = (env, args) => {
     experiments: {
     asyncWebAssembly: true,
     },
+    module: {
+      rules: [
+          {
+          test: /\.css$/i,
+          use: ["style-loader", "css-loader"],
+        },
+      ]
+    }
   }
 }
