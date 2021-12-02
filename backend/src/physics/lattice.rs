@@ -1,9 +1,9 @@
 
 #[derive(Debug)]
 pub struct Force {
-    name: String,
-    params: [f32;3],
-    indices: [i32;2],
+    pub name: String,
+    pub params: [f32;3],
+    pub indices: [usize;2],
 }
 
 #[derive(Debug)]
@@ -11,6 +11,7 @@ pub struct Node {
     pub name: String,
     pub position: [f32;6],
     pub velocity: [f32;6],
+    pub net_force: [f32;6],
     pub forces: Vec<Force>,
     pub visible: bool,
     pub colour: [f32;3],
@@ -25,7 +26,8 @@ impl Node {
             name: String::from("basic node"),
             position: [0.;6],
             velocity: [0.;6],
-            forces: vec![],
+            net_force: [0.;6],
+            forces: vec![Force{name:"test".to_string(), params:[0.,0.,0.], indices: [0,0]}],
             visible: true,
             colour: [1.,0.,0.],
             mass: 1.,
@@ -33,6 +35,8 @@ impl Node {
         }
     }
 }
+
+
 
 pub fn face_centred_cubic(cells_x: u8, cells_y: u8, cells_z: u8 , unit_len: f32) -> Vec<Node> {
     let mut data = vec![];
@@ -51,5 +55,6 @@ pub fn face_centred_cubic(cells_x: u8, cells_y: u8, cells_z: u8 , unit_len: f32)
             }
         }
     }
+
     data
 }

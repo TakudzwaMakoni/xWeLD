@@ -13,6 +13,7 @@ mod graphics {
 mod physics {
     pub mod lattice;
     pub mod verlet;
+    pub mod vector;
 }
 
 
@@ -25,7 +26,7 @@ extern "C" {
 #[wasm_bindgen]
 pub struct Client {
     data:Vec<physics::lattice::Node>,
-    updates: Vec<fn()>,
+    updates: Vec<fn(data: &mut Vec<physics::lattice::Node>)>,
     gl: WebGlRenderingContext,
     program_col_2d: graphics::programs::Col2D,
     program_circle_2d: graphics::programs::Circle2D,
@@ -39,7 +40,7 @@ impl Client {
         let gl_ = graphics::setup::initialise_webgl_context().unwrap();
         Self {
             data: physics::lattice::face_centred_cubic(2,2,2,0.1),
-            updates: vec![],
+            updates: vec![physics::verlet::resolve_forces, physics::verlet::velocity_verlet],
             program_col_2d: graphics::programs::Col2D::new(&gl_),
             program_circle_2d: graphics::programs::Circle2D::new(&gl_),
             gl: gl_,
@@ -47,7 +48,9 @@ impl Client {
     }
 
     pub fn update(&mut self, _time: f32, _height: f32, _width: f32) -> Result<(), JsValue> {
-
+        for u in self.updates.iter(){
+            u(&mut self.data);
+        }
         Ok(())
     }
 
