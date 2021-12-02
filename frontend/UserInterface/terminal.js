@@ -1,28 +1,117 @@
+const rust = import("../../backend/pkg/x_weld");
+
 module.exports  = {
-  input:"x",
-  output:"x",
   terminal: function() {
 
     // command map and commands
     var commandMap = new Map(
       [
-        ["print", user_print_command],
+        ["print", user_print],
+        ["g", user_graphics_control],
+        ["clear", clear_screen],
       ]
     )
 
-    function user_print_command(args){
+    function clear_screen(args){
+      output = "";
+    }
+
+    function user_print(args){
       str = ""
       for(arg in args){
           str += args[arg] + " ";
       }
       log(str);
+    }
 
+    function user_graphics_control(args){
+      if (args.length===0){
+        var help =
+        `
+        expected argument(s): e.g. 'aa [bool]' (switch antialias on/off)
+        `
+        logError(help);
+         return;
+      }
+
+       if(args[0]=="aa"){
+             if(args.length<2){
+               var help =
+               `
+               expected second argument: true / false
+               `
+               logError(help);
+                return;
+             }
+             if(args[1]=="true"){
+
+               // remove old
+               let oldCanvas = document.getElementById("canvas");
+               oldCanvas.remove();
+
+               let newCanvas = document.createElement("canvas");
+               newCanvas.width = document.getElementById("sim").clientWidth;
+               newCanvas.height = document.getElementById("sim").clientHeight;
+               newCanvas.id = "canvas";
+               newCanvas.style.cursor="crosshair";
+               newCanvas.style.borderColor = "black";
+               newCanvas.style.borderStyle = "solid";
+               document.getElementById("sim").appendChild(newCanvas);
+
+               let gl = newCanvas.getContext('webgl',{antialias: true});
+               if(!gl){
+                 alert("WebGL initialisation has failed!");
+                 return;
+               }
+              graphics.reset = true;
+             } else if (args[1]=="false") {
+               
+               // remove old
+               let oldCanvas = document.getElementById("canvas");
+               oldCanvas.remove();
+
+               let newCanvas = document.createElement("canvas");
+               newCanvas.width = document.getElementById("sim").clientWidth;
+               newCanvas.height = document.getElementById("sim").clientHeight;
+               newCanvas.id = "canvas";
+               newCanvas.style.cursor="crosshair";
+               newCanvas.style.borderColor = "black";
+               newCanvas.style.borderStyle = "solid";
+               document.getElementById("sim").appendChild(newCanvas);
+
+               let gl = newCanvas.getContext('webgl',{antialias: false});
+               if(!gl){
+                 alert("WebGL initialisation has failed!");
+                 return;
+               }
+              graphics.reset = true;
+
+             } else {
+               logError(args[1] + " isn't a recognised value.");
+             }
+
+        } else if(args[0]=="fps"){
+          if(args.length<2){
+            var help =
+            `
+            expected second argument: [number]
+            `
+            logError(help);
+             return;
+          }
+          graphics.fps = parseFloat(args[1]);
+          graphics.frames = 0;
+          graphics.start = performance.now();
+        } else {
+            logError(args[0] + " isn't a recognised option.");
+        }
     }
 
     // private variables
     var output="";
     var input="";
     var data=[] // reference to the data
+    let graphics;
 
 
     //private functions
@@ -59,7 +148,10 @@ module.exports  = {
     this.colouredText = function(msg, colour){
       return colouredText(msg, colour);
     }
-    this.setData = function(d){data=d}
+    this.bindData = function(d){data=d}
+    this.bindGraphics = function(g){
+      graphics = g;
+    }
 
 
     terminal = document.createElement("div");

@@ -47,6 +47,5 @@ impl Client {
                 .render(&mut self.gl, _height, _width);
         self.program_circle_2d
             .render(&mut self.gl, _height, _width);
-
     }
 }

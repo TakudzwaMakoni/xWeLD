@@ -1,10 +1,6 @@
-import css from "./style.css";
+import css from "../frontend/UserInterface/style.css";
 const rust = import("./pkg/x_weld");
 const ui = require("../frontend/UserInterface/terminal");
-
-
-let terminal = ui.terminal();
-terminal.log("hello world!");
 
 let sim = document.createElement("div");
 document.body.appendChild(sim);
@@ -24,9 +20,16 @@ canvas.style.borderColor = "black";
 canvas.style.borderStyle = "solid";
 sim.appendChild(canvas);
 
-const gl = canvas.getContext('webgl',{antialias: false});
-const FPS = 120.0;
-var frames = 0;
+let graphics = {
+  start:0,
+  fps: 120.0,
+  frames:0,
+
+  reset: false,
+  client: {},
+};
+
+var gl = canvas.getContext('webgl',{antialias: graphics.aa});
 
 rust.then(m => {
   if(!gl){
@@ -34,16 +37,18 @@ rust.then(m => {
     return;
   }
 
-  const rustClient = new m.Client();
-  const start = performance.now();
+graphics.client = new m.Client();
+let terminal = ui.terminal();
+terminal.log("hello world!");
+terminal.bindGraphics(graphics);
 
+graphics.start = performance.now();
   function render(){
     window.requestAnimationFrame(render);
-    const end = performance.now();
-    let elapsed = (end - start)/1000;
-    if((elapsed > frames * (1/FPS)))
+    let now = performance.now();
+    let elapsed = (now - graphics.start)/1000;
+    if((elapsed > graphics.frames * (1/graphics.fps)))
     {
-
       /*
       if(window.innerHeight != canvas.height || window.innerWidth != canvas.width){
 
@@ -58,11 +63,14 @@ rust.then(m => {
         gl.viewport(0,0, canvas.width, canvas.height);
       }
       */
-      rustClient.update(elapsed, canvas.height, canvas.width);
-      rustClient.draw(canvas.height, canvas.width);
-      frames++;
+      if (graphics.reset){
+        graphics.client = new m.Client();
+        graphics.reset = false;
+      }
+      graphics.client.update(elapsed, canvas.height, canvas.width);
+      graphics.client.draw(canvas.height, canvas.width);
+      graphics.frames++;
     }
   }
-
   render();
 })
