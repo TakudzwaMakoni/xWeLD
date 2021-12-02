@@ -10,6 +10,11 @@ mod graphics {
     pub mod shaders;
 }
 
+mod physics {
+    pub mod lattice;
+    pub mod verlet;
+}
+
 
 #[wasm_bindgen]
 extern "C" {
@@ -19,6 +24,8 @@ extern "C" {
 
 #[wasm_bindgen]
 pub struct Client {
+    data:Vec<physics::lattice::Node>,
+    updates: Vec<fn()>,
     gl: WebGlRenderingContext,
     program_col_2d: graphics::programs::Col2D,
     program_circle_2d: graphics::programs::Circle2D,
@@ -31,6 +38,8 @@ impl Client {
         console_error_panic_hook::set_once();
         let gl_ = graphics::setup::initialise_webgl_context().unwrap();
         Self {
+            data: physics::lattice::face_centred_cubic(2,2,2,0.1),
+            updates: vec![],
             program_col_2d: graphics::programs::Col2D::new(&gl_),
             program_circle_2d: graphics::programs::Circle2D::new(&gl_),
             gl: gl_,
@@ -38,14 +47,15 @@ impl Client {
     }
 
     pub fn update(&mut self, _time: f32, _height: f32, _width: f32) -> Result<(), JsValue> {
+
         Ok(())
     }
 
     pub fn draw(&mut self, _height: f32, _width: f32) {
         self.gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT);
-        self.program_col_2d
-                .render(&mut self.gl, _height, _width);
+        //self.program_col_2d
+        //        .render(&mut self.gl, &self.data, _height, _width);
         self.program_circle_2d
-            .render(&mut self.gl, _height, _width);
+            .render(&mut self.gl, &self.data, _height, _width);
     }
 }

@@ -28,7 +28,7 @@ module.exports  = {
       if (args.length===0){
         var help =
         `
-        expected argument(s): e.g. 'aa [bool]' (switch antialias on/off)
+          g(raphics): expected argument(s): e.g. 'aa [bool]' (switch antialias on/off)
         `
         logError(help);
          return;
@@ -38,7 +38,7 @@ module.exports  = {
              if(args.length<2){
                var help =
                `
-               expected second argument: true / false
+                 g(raphics): expected second argument: true / false
                `
                logError(help);
                 return;
@@ -65,7 +65,7 @@ module.exports  = {
                }
               graphics.reset = true;
              } else if (args[1]=="false") {
-               
+
                // remove old
                let oldCanvas = document.getElementById("canvas");
                oldCanvas.remove();
@@ -87,14 +87,14 @@ module.exports  = {
               graphics.reset = true;
 
              } else {
-               logError(args[1] + " isn't a recognised value.");
+               logError("g(raphics): "+args[1] + " isn't a recognised value.");
              }
 
         } else if(args[0]=="fps"){
           if(args.length<2){
             var help =
             `
-            expected second argument: [number]
+             g(raphics): expected second argument: [number]
             `
             logError(help);
              return;
@@ -103,7 +103,7 @@ module.exports  = {
           graphics.frames = 0;
           graphics.start = performance.now();
         } else {
-            logError(args[0] + " isn't a recognised option.");
+            logError("g(raphics): "+args[0] + " isn't a recognised option.");
         }
     }
 

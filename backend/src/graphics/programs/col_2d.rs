@@ -1,4 +1,5 @@
 use super::super::common as cm;
+use super::super::super::physics as ph;
 use js_sys::WebAssembly;
 use wasm_bindgen::JsCast;
 use web_sys::WebGlRenderingContext as GL;
@@ -60,6 +61,7 @@ impl Col2D {
     pub fn render(
         &mut self,
         gl: &WebGlRenderingContext,
+        data: &Vec<ph::lattice::Node>,
         height: f32,
         width: f32,
     ) {
@@ -106,7 +108,6 @@ impl Circle2D {
         )
         .unwrap();
 
-        // calc number of triangles from definition
         let angle : f32 = 0.0174533; // 1 degree
         let mut v_circle = [0.; 3600*6];
 
@@ -148,6 +149,7 @@ impl Circle2D {
     pub fn render(
         &mut self,
         gl: &WebGlRenderingContext,
+        data: &Vec<ph::lattice::Node>,
         height: f32,
         width: f32,
     ) {
@@ -163,6 +165,29 @@ impl Circle2D {
 
         self.angle += 0.01;
 
+        for (index, node) in data.iter().enumerate() {
+
+            gl.uniform4f(Some(&self.u_col),
+             node.colour[0],
+             node.colour[1],
+             node.colour[2],
+             1.0);
+
+            let translation = cm::translate4(
+                node.position[0],
+                node.position[1],
+                node.position[2],);
+
+
+             let transform = cm::mult_matrix_4(
+             cm::scale4(0.01,0.01,0.01),
+             translation);
+
+             gl.uniform_matrix4fv_with_f32_array(Some(&self.u_transform), false,  &cm::mult_matrix_4(anti_aspect, transform) );
+             gl.draw_arrays(GL::TRIANGLES, 0, (self.v_triangles_len / 2) as i32);
+
+        }
+        /*
         for i in 0..20{
 
             for j in 0..20{
@@ -182,5 +207,6 @@ impl Circle2D {
                 gl.draw_arrays(GL::TRIANGLES, 0, (self.v_triangles_len / 2) as i32);
             }
         }
+*/
     }
 }

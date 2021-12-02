@@ -29,8 +29,7 @@ let graphics = {
   client: {},
 };
 
-var gl = canvas.getContext('webgl',{antialias: graphics.aa});
-
+var gl = canvas.getContext('webgl',{antialias: true});
 rust.then(m => {
   if(!gl){
     alert("WebGL initialisation has failed!");
@@ -44,9 +43,12 @@ terminal.bindGraphics(graphics);
 
 graphics.start = performance.now();
   function render(){
-    window.requestAnimationFrame(render);
+
     let now = performance.now();
     let elapsed = (now - graphics.start)/1000;
+    graphics.client.update(elapsed, canvas.height, canvas.width);
+
+    window.requestAnimationFrame(render);
     if((elapsed > graphics.frames * (1/graphics.fps)))
     {
       /*
@@ -67,7 +69,6 @@ graphics.start = performance.now();
         graphics.client = new m.Client();
         graphics.reset = false;
       }
-      graphics.client.update(elapsed, canvas.height, canvas.width);
       graphics.client.draw(canvas.height, canvas.width);
       graphics.frames++;
     }
