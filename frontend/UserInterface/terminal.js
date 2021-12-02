@@ -1,7 +1,7 @@
 module.exports  = {
   input:"x",
   output:"x",
-  init: function() {
+  terminal: function() {
 
     // private variables
     var output="";
