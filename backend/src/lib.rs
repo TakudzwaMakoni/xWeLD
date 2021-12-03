@@ -14,6 +14,9 @@ mod physics {
     pub mod lattice;
     pub mod verlet;
     pub mod vector;
+    pub mod harmonic {
+        pub mod spring;
+    }
 }
 
 
@@ -38,9 +41,21 @@ impl Client {
     pub fn new() -> Self {
         console_error_panic_hook::set_once();
         let gl_ = graphics::setup::initialise_webgl_context().unwrap();
+
+        // generate data
+        let mut data = physics::lattice::face_centred_cubic(2,1,1,0.1);
+        let predicate = physics::harmonic::spring::basic_spring_predicate;
+        // generate springs
+        let force = physics::lattice::Force {
+            name: String::from("spring"),
+            params: [0., 0.1, 0.],
+            indices: [0,0],
+        };
+
+        physics::lattice::generate_interatomic_forces(&force, &mut data, "none");
         Self {
-            data: physics::lattice::face_centred_cubic(2,2,2,0.1),
-            updates: vec![physics::verlet::resolve_forces, physics::verlet::velocity_verlet],
+            data: data,
+            updates: vec![physics::verlet::resolve_forces, physics::verlet::velocity_verlet, physics::verlet::update_state],
             program_col_2d: graphics::programs::Col2D::new(&gl_),
             program_circle_2d: graphics::programs::Circle2D::new(&gl_),
             gl: gl_,

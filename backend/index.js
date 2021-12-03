@@ -22,7 +22,7 @@ sim.appendChild(canvas);
 
 let graphics = {
   start:0,
-  fps: 120.0,
+  fps: 10.,
   frames:0,
 
   reset: false,
@@ -46,11 +46,10 @@ graphics.start = performance.now();
 
     let now = performance.now();
     let elapsed = (now - graphics.start)/1000;
-    graphics.client.update(elapsed, canvas.height, canvas.width);
 
     window.requestAnimationFrame(render);
-    if((elapsed > graphics.frames * (1/graphics.fps)))
-    {
+    if((elapsed > graphics.frames * (1/graphics.fps))){
+      graphics.client.update(elapsed, canvas.height, canvas.width);
       /*
       if(window.innerHeight != canvas.height || window.innerWidth != canvas.width){
 
@@ -64,7 +63,7 @@ graphics.start = performance.now();
 
         gl.viewport(0,0, canvas.width, canvas.height);
       }
-      */
+*/
       if (graphics.reset){
         graphics.client = new m.Client();
         graphics.reset = false;
