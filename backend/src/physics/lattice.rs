@@ -1,5 +1,6 @@
 use super::harmonic as harmonic;
 use super::verlet as verlet;
+
 #[derive(Debug)]
 pub struct Force {
     pub name: String,
@@ -29,7 +30,7 @@ impl Node {
             position: [0.;6],
             velocity: [0.;6],
             net_force: [0.;6],
-            forces: vec![Force{name:"test".to_string(), params:[0.,0.,0.], indices: [0,0]}],
+            forces: vec![],
             visible: true,
             colour: [1.,0.,0.],
             mass: 1.,

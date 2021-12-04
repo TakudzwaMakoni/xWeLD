@@ -8,6 +8,10 @@ fn test_force(node_index: usize, force_index: usize, data: &Vec<Node>) -> Vec<(u
     vec![(data[node_index].id,[0.01, 0., 0., 0., 0., 0.,])]
 }
 
+fn no_force(node_index: usize, force_index: usize, data: &Vec<Node>) -> Vec<(usize,[f32;6])> {
+    vec![(0,[0., 0., 0., 0., 0., 0.,])]
+}
+
 pub struct ForceLibrary {
     //map: HashMap<String, fn(node_index: usize, force_index: usize, data: &Vec<Node>) -> Vec<(usize,[f32;6])>>,
     spring: fn(node_index: usize, force_index: usize, data: &Vec<Node>) -> Vec<(usize,[f32;6])>,
@@ -28,13 +32,13 @@ pub fn resolve_forces(data: &mut Vec<Node>){
     let force_lib = ForceLibrary::new();
     for i in 0..data.len() {
         for j in 0..(data[i].forces).len() {
+
             let name : &str = &data[i].forces[j].name;
             let actions : Vec<(usize,[f32;6])> = match name {
                 "test"=> test_force(i, j,&data),
                 "spring"=> harmonic::spring::spring_force(i, j,&data),
-                _ => test_force(i, j,&data),
+                _ => no_force(i, j,&data),
             };
-
             for k in 0..actions.len() {
                 let action = actions[k];
                 let index = action.0;
@@ -60,11 +64,7 @@ pub fn update_state(data : &mut Vec<Node>) {
         data[i].velocity[0] = data[i].velocity[3];
         data[i].velocity[1] = data[i].velocity[4];
         data[i].velocity[2] = data[i].velocity[5];
-
-        log(&format!("{:#?}",data[i].position));
     }
-
-
 }
 
 pub fn velocity_verlet(data: &mut Vec<Node>){
@@ -87,9 +87,82 @@ pub fn velocity_verlet(data: &mut Vec<Node>){
         node.position[3] = rf[0];
         node.position[4] = rf[1];
         node.position[5] = rf[2];
-
         node.velocity[3] = vf[0];
         node.velocity[4] = vf[1];
         node.velocity[5] = vf[2];
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_resolve_forces() {
+        let mut data : Vec<Node> = vec![];
+        for i in 0..100 {
+            let mut node = Node::new();
+            node.id = i as usize;
+            let force = Force {
+                name: String::from("test"),
+                params: [0., 0., 0.],
+                indices: [0,0],
+            };
+            node.forces.push(force);
+            data.push(node);
+        }
+        resolve_forces(&mut data);
+        for node in data.iter() {
+            assert_eq!(node.net_force[0], 0.01);
+        }
+    }
+
+    #[test]
+    fn test_velocity_verlet() {
+        let mut data : Vec<Node> = vec![];
+        for i in 0..100 {
+            let mut node = Node::new();
+            node.id = i as usize;
+            let force = Force {
+                name: String::from("test"),
+                params: [0., 0., 0.],
+                indices: [0,0],
+            };
+            node.forces.push(force);
+            data.push(node);
+        }
+        resolve_forces(&mut data);
+        velocity_verlet(&mut data);
+        for node in data.iter() {
+            // assert is equal to ut + 1/2 at^2
+            assert_eq!(node.position[3], 0.5 * 0.01*DT*DT);
+            // assert is equal to u + 1/2 at
+            assert_eq!(node.velocity[3], 0.5 * 0.01 * DT);
+        }
+    }
+
+    #[test]
+    fn test_update_state() {
+        let mut data : Vec<Node> = vec![];
+        for i in 0..100 {
+            let mut node = Node::new();
+            node.id = i as usize;
+            let force = Force {
+                name: String::from("test"),
+                params: [0., 0., 0.],
+                indices: [0,0],
+            };
+            node.forces.push(force);
+            data.push(node);
+        }
+        resolve_forces(&mut data);
+        velocity_verlet(&mut data);
+        update_state(&mut data);
+        for node in data.iter() {
+            // assert is equal to ut + 1/2 at^2
+            assert_eq!(node.position[0], 0.5 * 0.01*DT*DT);
+            // assert is equal to u + 1/2 at
+            assert_eq!(node.velocity[0], 0.5 * 0.01 * DT);
+        }
     }
 }
