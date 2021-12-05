@@ -82,21 +82,24 @@ pub fn velocity_verlet(data: &mut Vec<Node>){
             net_force));
 
         let rf = vec::add(position, vec::scale(DT, v_half));
-        let vf = vec::add(v_half, vec::scale(DT * 0.5, vec::add(net_future_force, net_force)));
-
+        let vf = vec::add(velocity, vec::scale(DT * 0.5 * (1./node.mass), vec::add(net_future_force, net_force)));
+        println!("{:#?}",vf);
         node.position[3] = rf[0];
         node.position[4] = rf[1];
         node.position[5] = rf[2];
         node.velocity[3] = vf[0];
         node.velocity[4] = vf[1];
         node.velocity[5] = vf[2];
-
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn approx_eq(a:f32, b:f32, precision: f32) -> bool {
+        (a - b).abs() < precision
+    }
 
     #[test]
     fn test_resolve_forces() {
@@ -137,8 +140,8 @@ mod tests {
         for node in data.iter() {
             // assert is equal to ut + 1/2 at^2
             assert_eq!(node.position[3], 0.5 * 0.01*DT*DT);
-            // assert is equal to u + at
-            assert_eq!(node.velocity[3],  0.01 * DT);
+            // assert is equal to u(t) + 1/2 Δt[a(t) + a(t + Δt)]
+            assert_eq!(node.velocity[3],  0.5 * 0.01 * DT);
         }
     }
 
@@ -162,8 +165,63 @@ mod tests {
         for node in data.iter() {
             // assert is equal to ut + 1/2 at^2
             assert_eq!(node.position[0], 0.5 * 0.01*DT*DT);
-            // assert is equal to u + at
-            assert_eq!(node.velocity[0],  0.01 * DT);
+            // assert is equal to u(t) + 1/2 Δt[a(t) + a(t + Δt)]
+            assert_eq!(node.velocity[0], 0.5 * 0.01 * DT);
         }
+    }
+
+    #[test]
+    fn test_spring_force() {
+        let mut data : Vec<Node> = vec![];
+        let mut node1 = Node::new();
+        let mut node2 = Node::new();
+        node1.position[0]= -0.5;
+        node2.position[0]= 0.5;
+        node1.position[1]= -0.5;
+        node2.position[1]= 0.5;
+
+        let force1 = Force {
+            name: String::from("spring"),
+            params: [1., 1., 0.],
+            indices: [1,0],
+        };
+
+        let force2 = Force {
+            name: String::from("spring"),
+            params: [1., 1., 0.],
+            indices: [0,0],
+        };
+
+        node1.forces.push(force1);
+        node2.forces.push(force2);
+
+        data.push(node1);
+        data.push(node2);
+
+        resolve_forces(&mut data);
+        velocity_verlet(&mut data);
+        update_state(&mut data);
+
+        let pos1 = data[0].position[0];
+        let pos2 = data[1].position[1];
+
+        let vel1 = data[0].velocity[0];
+        let vel2 = data[1].velocity[1];
+
+        let force1 = data[0].net_force[0];
+        let force2 = data[1].net_force[1];
+
+        assert!(approx_eq(pos1, -0.4999853553, 0.0005));
+        assert!(approx_eq(pos2, 0.4999853553, 0.0005));
+
+        assert!(approx_eq(force1, 0.2928932188, 0.0005));
+        assert!(approx_eq(force2, -0.2928932188, 0.0005));
+
+        // assert is equal to u(t) + 1/2 Δt[a(t) + a(t + Δt)]
+        assert_eq!(vel1, 0.005*(data[0].net_force[0] + data[0].net_force[3]));
+        assert_eq!(vel1, -0.005*(data[1].net_force[0] + data[1].net_force[3]));
+
+        //assert!(approx_eq(vel2, -7.07e-3, 0.0005));
+
     }
 }
