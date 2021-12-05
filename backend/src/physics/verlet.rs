@@ -77,12 +77,12 @@ pub fn velocity_verlet(data: &mut Vec<Node>){
         let net_force = [node.net_force[0],node.net_force[1],node.net_force[2],];
         let net_future_force = [node.net_force[3],node.net_force[4],node.net_force[5],];
 
-        let v_half = vec::add(position,
-            vec::scale(0.5 * (1. / node.mass) * 0.01,
+        let v_half = vec::add(velocity,
+            vec::scale(0.5 * (1. / node.mass) * DT,
             net_force));
 
         let rf = vec::add(position, vec::scale(DT, v_half));
-        let vf = vec::add(v_half, vec::scale(DT * 0.5 * (1. / node.mass), net_future_force));
+        let vf = vec::add(v_half, vec::scale(DT * 0.5, vec::add(net_future_force, net_force)));
 
         node.position[3] = rf[0];
         node.position[4] = rf[1];
@@ -90,6 +90,7 @@ pub fn velocity_verlet(data: &mut Vec<Node>){
         node.velocity[3] = vf[0];
         node.velocity[4] = vf[1];
         node.velocity[5] = vf[2];
+
     }
 }
 
@@ -136,8 +137,8 @@ mod tests {
         for node in data.iter() {
             // assert is equal to ut + 1/2 at^2
             assert_eq!(node.position[3], 0.5 * 0.01*DT*DT);
-            // assert is equal to u + 1/2 at
-            assert_eq!(node.velocity[3], 0.5 * 0.01 * DT);
+            // assert is equal to u + at
+            assert_eq!(node.velocity[3],  0.01 * DT);
         }
     }
 
@@ -161,8 +162,8 @@ mod tests {
         for node in data.iter() {
             // assert is equal to ut + 1/2 at^2
             assert_eq!(node.position[0], 0.5 * 0.01*DT*DT);
-            // assert is equal to u + 1/2 at
-            assert_eq!(node.velocity[0], 0.5 * 0.01 * DT);
+            // assert is equal to u + at
+            assert_eq!(node.velocity[0],  0.01 * DT);
         }
     }
 }
