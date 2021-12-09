@@ -1,38 +1,21 @@
 use super::lattice::*;
-use super::vector as vec;
 use super::harmonic as harmonic;
-use super::super::graphics::common::log;
+use crate::common::linear_algebra::vector as vec;
+
 pub static DT : f32 = 0.01;
 
-fn test_force(node_index: usize, force_index: usize, data: &Vec<Node>) -> Vec<(usize,[f32;6])> {
+fn test_force(node_index: usize, _force_index: usize, data: &Vec<Node>) -> Vec<(usize,[f32;6])> {
     vec![(data[node_index].id,[0.01, 0., 0., 0., 0., 0.,])]
 }
 
-fn no_force(node_index: usize, force_index: usize, data: &Vec<Node>) -> Vec<(usize,[f32;6])> {
+fn no_force(_node_index: usize, _force_index: usize, _data: &Vec<Node>) -> Vec<(usize,[f32;6])> {
     vec![(0,[0., 0., 0., 0., 0., 0.,])]
 }
 
-pub struct ForceLibrary {
-    //map: HashMap<String, fn(node_index: usize, force_index: usize, data: &Vec<Node>) -> Vec<(usize,[f32;6])>>,
-    spring: fn(node_index: usize, force_index: usize, data: &Vec<Node>) -> Vec<(usize,[f32;6])>,
-    //valence_angle: fn(node:Node, data: Vec<Node>, params: [f32;3]) -> Vec<[f32;3]>,
-    test: fn(node_index: usize, force_index: usize, data: &Vec<Node>) -> Vec<(usize,[f32;6])>,
-}
-
-impl ForceLibrary {
-    pub fn new() -> Self {
-        Self{
-            spring: harmonic::spring::spring_force,
-            test: test_force,
-        }
-    }
-}
-
 pub fn resolve_forces(data: &mut Vec<Node>){
-    let force_lib = ForceLibrary::new();
+
     for i in 0..data.len() {
         for j in 0..(data[i].forces).len() {
-
             let name : &str = &data[i].forces[j].name;
             let actions : Vec<(usize,[f32;6])> = match name {
                 "test"=> test_force(i, j,&data),
@@ -64,6 +47,8 @@ pub fn update_state(data : &mut Vec<Node>) {
         data[i].velocity[0] = data[i].velocity[3];
         data[i].velocity[1] = data[i].velocity[4];
         data[i].velocity[2] = data[i].velocity[5];
+
+        data[i].net_force = [0.;6];
     }
 }
 
@@ -71,7 +56,6 @@ pub fn velocity_verlet(data: &mut Vec<Node>){
 
     for i in 0..data.len() {
         let node = &mut data[i];
-
         let position = [node.position[0],node.position[1],node.position[2],];
         let velocity = [node.velocity[0],node.velocity[1],node.velocity[2],];
         let net_force = [node.net_force[0],node.net_force[1],node.net_force[2],];
@@ -83,7 +67,7 @@ pub fn velocity_verlet(data: &mut Vec<Node>){
 
         let rf = vec::add(position, vec::scale(DT, v_half));
         let vf = vec::add(velocity, vec::scale(DT * 0.5 * (1./node.mass), vec::add(net_future_force, net_force)));
-        println!("{:#?}",vf);
+
         node.position[3] = rf[0];
         node.position[4] = rf[1];
         node.position[5] = rf[2];
@@ -91,6 +75,7 @@ pub fn velocity_verlet(data: &mut Vec<Node>){
         node.velocity[4] = vf[1];
         node.velocity[5] = vf[2];
     }
+
 }
 
 #[cfg(test)]
@@ -199,8 +184,19 @@ mod tests {
         data.push(node2);
 
         resolve_forces(&mut data);
+
+        let force_x_1 = data[0].net_force[0];
+        let force_x_2 = data[1].net_force[0];
+        let force_x_1_future = data[0].net_force[3];
+        let force_x_2_future = data[1].net_force[3];
+
+        assert!(approx_eq(force_x_1, 0.2928932188, 0.0005));
+        assert!(approx_eq(force_x_2, -0.2928932188, 0.0005));
+
         velocity_verlet(&mut data);
         update_state(&mut data);
+        assert!(approx_eq(data[0].net_force[0], 0., 0.0005));
+        assert!(approx_eq(data[1].net_force[0], 0., 0.0005));
 
         let pos1 = data[0].position[0];
         let pos2 = data[1].position[1];
@@ -208,20 +204,11 @@ mod tests {
         let vel1 = data[0].velocity[0];
         let vel2 = data[1].velocity[1];
 
-        let force1 = data[0].net_force[0];
-        let force2 = data[1].net_force[1];
-
         assert!(approx_eq(pos1, -0.4999853553, 0.0005));
         assert!(approx_eq(pos2, 0.4999853553, 0.0005));
 
-        assert!(approx_eq(force1, 0.2928932188, 0.0005));
-        assert!(approx_eq(force2, -0.2928932188, 0.0005));
-
         // assert is equal to u(t) + 1/2 Δt[a(t) + a(t + Δt)]
-        assert_eq!(vel1, 0.005*(data[0].net_force[0] + data[0].net_force[3]));
-        assert_eq!(vel1, -0.005*(data[1].net_force[0] + data[1].net_force[3]));
-
-        //assert!(approx_eq(vel2, -7.07e-3, 0.0005));
-
+        assert_eq!(vel1, 0.005*(force_x_1 + force_x_1_future));
+        assert_eq!(vel2, 0.005*(force_x_2 + force_x_2_future));
     }
 }

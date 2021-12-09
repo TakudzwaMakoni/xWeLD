@@ -1,18 +1,31 @@
 use crate::physics::verlet::DT;
 use super::super::lattice::*;
-use super::super::vector as vec;
+use crate::common::linear_algebra::vector as vec;
 
 // a predicate for creating spring forces based on
 // distance from neighbouring nodes
 pub fn basic_spring_predicate(d1 : &Node, d2: &Node, equilibrium : f32) -> bool {
   if d1.id == d2.id { return false; }
+  let pos1 = [d1.position[0], d1.position[1], d1.position[2]];
+  let pos2 = [d2.position[0], d2.position[1], d2.position[2]];
+  vec::norm(vec::sub(pos1, pos2)) <= equilibrium
+}
 
-  let dx2 = f32::powi(d2.position[0] - d1.position[0], 2);
-  let dy2 = f32::powi(d2.position[1] - d1.position[1], 2);
-  let dz2 = f32::powi(d2.position[2] - d1.position[2], 2);
-  let distance_squared = dx2 + dy2 + dz2;
-
-  distance_squared == f32::powi(equilibrium, 2)
+pub fn generate_spring_forces(data : &mut Vec<Node>, spring_constant : f32, equilibrium : f32) {
+    for i in 0..data.len() {
+        for j in 0..data.len(){
+            if basic_spring_predicate(&data[i], &data[j], equilibrium) {
+                let id = data[j].id;
+                data[i].forces.push(
+                    Force {
+                        name: String::from("spring"),
+                        params: [ spring_constant, equilibrium, 0.],
+                        indices: [id, 0],
+                    }
+                );
+            }
+        }
+    }
 }
 
 

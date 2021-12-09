@@ -169,6 +169,7 @@ module.exports  = {
     terminal.style.fontFamily = "monospace";
     terminal.style.overflowX = "scroll";
     terminal.style.overflowY = "scroll";
+    terminal.style.backgroundColor = "black";
 
     terminal.addEventListener("focus",function(event){
         terminal.style.color = "white";

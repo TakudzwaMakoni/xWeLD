@@ -3,8 +3,8 @@ use wasm_bindgen::prelude::*;
 use web_sys::WebGlRenderingContext as GL;
 use web_sys::*;
 
+mod common;
 mod graphics {
-    pub mod common;
     pub mod programs;
     pub mod setup;
     pub mod shaders;
@@ -13,12 +13,10 @@ mod graphics {
 mod physics {
     pub mod lattice;
     pub mod verlet;
-    pub mod vector;
     pub mod harmonic {
         pub mod spring;
     }
 }
-
 
 #[wasm_bindgen]
 extern "C" {
@@ -26,7 +24,9 @@ extern "C" {
     pub fn log(s: &str);
 }
 
+
 #[wasm_bindgen]
+#[allow(dead_code)]
 pub struct Client {
     data:Vec<physics::lattice::Node>,
     updates: Vec<fn(data: &mut Vec<physics::lattice::Node>)>,
@@ -43,16 +43,10 @@ impl Client {
         let gl_ = graphics::setup::initialise_webgl_context().unwrap();
 
         // generate data
-        let mut data = physics::lattice::face_centred_cubic(2,1,1,0.1);
-        let predicate = physics::harmonic::spring::basic_spring_predicate;
-        // generate springs
-        let force = physics::lattice::Force {
-            name: String::from("spring"),
-            params: [0., 0.1, 0.],
-            indices: [0,0],
-        };
+        let mut data = physics::lattice::primitive_cubic(2,1,1,0.1);
+        physics::harmonic::spring::generate_spring_forces(&mut data, 0.8, 0.1);
+        //data[0].position[0] = 0.05;
 
-        physics::lattice::generate_interatomic_forces(&force, &mut data, "none");
         Self {
             data: data,
             updates: vec![physics::verlet::resolve_forces, physics::verlet::velocity_verlet, physics::verlet::update_state],
@@ -71,9 +65,9 @@ impl Client {
 
     pub fn draw(&mut self, _height: f32, _width: f32) {
         self.gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT);
-        //self.program_col_2d
-        //        .render(&mut self.gl, &self.data, _height, _width);
         self.program_circle_2d
             .render(&mut self.gl, &self.data, _height, _width);
+        self.program_col_2d
+                .render(&mut self.gl, &self.data, _height, _width);
     }
 }
