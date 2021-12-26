@@ -92,7 +92,6 @@ impl Circle2D {
                 node.position[1],
                 node.position[2],);
 
-
              let transform = mat::mult_matrix_4(
              mat::scale4(0.01,0.01,0.01),
              translation);

@@ -31,7 +31,7 @@ pub struct Client {
     data:Vec<physics::lattice::Node>,
     updates: Vec<fn(data: &mut Vec<physics::lattice::Node>)>,
     gl: WebGlRenderingContext,
-    program_col_2d: graphics::programs::Col2D,
+    program_col_2d: graphics::programs::Line2D,
     program_circle_2d: graphics::programs::Circle2D,
 }
 
@@ -43,14 +43,14 @@ impl Client {
         let gl_ = graphics::setup::initialise_webgl_context().unwrap();
 
         // generate data
-        let mut data = physics::lattice::primitive_cubic(2,1,1,0.1);
-        physics::harmonic::spring::generate_spring_forces(&mut data, 0.8, 0.1);
-        //data[0].position[0] = 0.05;
+        let mut data = physics::lattice::primitive_cubic(2,2,2,0.1);
+        physics::harmonic::spring::generate_spring_forces(&mut data, 1.8, 0.1);
+        // data[1].position[0] = 0.05;
 
         Self {
             data: data,
             updates: vec![physics::verlet::resolve_forces, physics::verlet::velocity_verlet, physics::verlet::update_state],
-            program_col_2d: graphics::programs::Col2D::new(&gl_),
+            program_col_2d: graphics::programs::Line2D::new(&gl_),
             program_circle_2d: graphics::programs::Circle2D::new(&gl_),
             gl: gl_,
         }
@@ -65,9 +65,10 @@ impl Client {
 
     pub fn draw(&mut self, _height: f32, _width: f32) {
         self.gl.clear(GL::COLOR_BUFFER_BIT | GL::DEPTH_BUFFER_BIT);
+        self.program_col_2d
+                .render(&mut self.gl, &self.data, _height, _width); 
         self.program_circle_2d
             .render(&mut self.gl, &self.data, _height, _width);
-        self.program_col_2d
-                .render(&mut self.gl, &self.data, _height, _width);
+
     }
 }

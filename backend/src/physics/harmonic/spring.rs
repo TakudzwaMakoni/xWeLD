@@ -8,7 +8,7 @@ pub fn basic_spring_predicate(d1 : &Node, d2: &Node, equilibrium : f32) -> bool 
   if d1.id == d2.id { return false; }
   let pos1 = [d1.position[0], d1.position[1], d1.position[2]];
   let pos2 = [d2.position[0], d2.position[1], d2.position[2]];
-  vec::norm(vec::sub(pos1, pos2)) <= equilibrium
+  (vec::norm(vec::sub(pos1, pos2)) -  equilibrium).abs() < 0.01
 }
 
 pub fn generate_spring_forces(data : &mut Vec<Node>, spring_constant : f32, equilibrium : f32) {
